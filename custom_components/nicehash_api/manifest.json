@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://gitea.zlan.io/apps/ha_nicehash/issues",
   "requirements": ["httpx>=0.28.0"],
-  "version": "1.1.0"
+  "version": "1.1.1"
 }

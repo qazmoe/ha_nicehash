@@ -69,9 +69,8 @@ class NiceHashClient:
             })
 
         try:
-            resp = await client.request(
-                method, path, headers=headers, params=params or None
-            )
+            url = path + (f"?{query}" if query else "")
+            resp = await client.request(method, url, headers=headers)
         except httpx.HTTPError as err:
             raise NiceHashApiError(f"Connection error talking to NiceHash: {err}") from err
 
@@ -87,7 +86,7 @@ class NiceHashClient:
 
     async def validate_credentials(self) -> dict[str, Any]:
         """Cheap authenticated call to verify key/secret/org during config flow."""
-        return await self._request("GET", "/main/api/v2/accounting/accounts2", {" fiat": "USD"})
+        return await self._request("GET", "/main/api/v2/accounting/accounts2")
 
     # -- Public (unauthenticated) market endpoints -------------------------
 
