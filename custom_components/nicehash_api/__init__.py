@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import NiceHashApiError, NiceHashClient
-from .const import DOMAIN, UPDATE_INTERVAL_MINUTES
+from .const import DOMAIN, UPDATE_INTERVAL_MINUTES, DEFAULT_WATCHED_ALGORITHMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     async def _update() -> dict[str, Any]:
-        data: dict[str, Any] = {"rigs": [], "accounts": [], "payouts": None}
+        data: dict[str, Any] = {
+            "rigs": [], "accounts": [], "payouts": None,
+            "market": {}, "market_24h": {}, "simplemultialgo": [],
+        }
         try:
             data["accounts"] = await client.get_accounts()
         except NiceHashApiError as err:
@@ -43,6 +46,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data["payouts"] = await client.get_payouts()
             except NiceHashApiError as err:
                 _LOGGER.warning("Could not fetch NiceHash payouts: %s", err)
+
+        # v1.1: market data (public endpoints, no auth cost) — failure is non-fatal
+        watched = entry.options.get("watched_algorithms", DEFAULT_WATCHED_ALGORITHMS)
+        try:
+            current = await client.get_global_stats_current()
+            idx = {}
+            for algo in current:
+                idx[algo.get("a")] = algo
+            data["market"] = idx
+        except NiceHashApiError as err:
+            _LOGGER.warning("Could not fetch NiceHash market stats: %s", err)
+        try:
+            stats24 = await client.get_global_stats_24h()
+            data["market_24h"] = {algo.get("a"): algo for algo in stats24}
+        except NiceHashApiError as err:
+            _LOGGER.warning("Could not fetch 24h market stats: %s", err)
+        try:
+            sma = await client.get_simplemultialgo()
+            data["simplemultialgo"] = [a for a in sma if a.get("algorithm") in watched]
+        except NiceHashApiError as err:
+            _LOGGER.warning("Could not fetch simplemultialgo: %s", err)
+        data["watched_algorithms"] = watched
         return data
 
     coordinator = DataUpdateCoordinator(

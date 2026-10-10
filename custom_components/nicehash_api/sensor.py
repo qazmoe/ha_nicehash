@@ -61,6 +61,13 @@ async def async_setup_entry(
     # Payouts
     if opts.get("enable_payouts", False):
         entities.append(RecentPayoutSensor(coordinator, org_id))
+        entities.append(PayoutHistorySensor(coordinator, org_id))
+
+    # v1.1: market sensors for watched algorithms
+    for algo_info in coordinator.data.get("simplemultialgo", []):
+        algo = algo_info.get("algorithm", "")
+        entities.append(AlgorithmPayingSensor(coordinator, algo, algo_info.get("title", algo)))
+        entities.append(AlgorithmNetworkSpeedSensor(coordinator, algo, algo_info.get("title", algo)))
 
     async_add_entities(entities)
 
@@ -239,6 +246,115 @@ class BalanceSensor(NiceHashSensorBase):
                 value = account.get(key)
                 return float(value) if value is not None else None
         return None
+
+
+class PayoutHistorySensor(NiceHashSensorBase):
+    """Cumulative payout count over the fetched window + recent list as attributes."""
+
+    _attr_icon = "mdi:cash-multiple"
+
+    def __init__(self, coordinator, org_id):
+        super().__init__(coordinator)
+        self._attr_name = "NiceHash Payout Count (window)"
+        self._attr_unique_id = f"{org_id}:payout_count"
+        self._attr_native_unit_of_measurement = "payouts"
+
+    @property
+    def native_value(self):
+        payouts = self._coordinator.data.get("payouts")
+        if not payouts:
+            return None
+        return len(payouts.get("list", []))
+
+    @property
+    def extra_state_attributes(self):
+        payouts = self._coordinator.data.get("payouts")
+        if not payouts:
+            return None
+        listing = payouts.get("list", [])[:10]
+        return {
+            "payouts": [
+                {
+                    "created": p.get("created"),
+                    "amount": p.get("amount"),
+                    "fee": p.get("feeAmount"),
+                }
+                for p in listing
+            ],
+            "total": payouts.get("total"),
+        }
+
+
+class AlgorithmMarketSensorBase(NiceHashSensorBase):
+    def __init__(self, coordinator, algorithm: str, title: str) -> None:
+        super().__init__(coordinator)
+        self._algorithm = algorithm
+        self._title = title
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, f"market_{self._algorithm}")},
+            "name": f"NiceHash Market: {self._title}",
+            "manufacturer": "NiceHash",
+            "via_device": (DOMAIN, "nicehash"),
+        }
+
+    def _sma_entry(self):
+        for a in self._coordinator.data.get("simplemultialgo", []):
+            if a.get("algorithm") == self._algorithm:
+                return a
+        return None
+
+
+class AlgorithmPayingSensor(AlgorithmMarketSensorBase):
+    """Current paying rate for a watched algorithm (BTC per unit per day)."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:currency-btc"
+
+    def __init__(self, coordinator, algorithm, title):
+        super().__init__(coordinator, algorithm, title)
+        self._attr_name = f"{title} Paying Rate"
+        self._attr_unique_id = f"market:{algorithm}:paying"
+        self._attr_native_unit_of_measurement = "BTC/TH/day"
+
+    @property
+    def native_value(self):
+        entry = self._sma_entry()
+        if entry is None:
+            return None
+        paying = entry.get("paying")
+        return float(paying) if paying else None
+
+    @property
+    def extra_state_attributes(self):
+        entry = self._sma_entry()
+        if not entry:
+            return None
+        speed = entry.get("speed")
+        return {"network_speed": float(speed) if speed else None}
+
+
+class AlgorithmNetworkSpeedSensor(AlgorithmMarketSensorBase):
+    """Total network hashrate for a watched algorithm (difficulty proxy)."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:speedometer"
+
+    def __init__(self, coordinator, algorithm, title):
+        super().__init__(coordinator, algorithm, title)
+        self._attr_name = f"{title} Network Hashrate"
+        self._attr_unique_id = f"market:{algorithm}:speed"
+        self._attr_native_unit_of_measurement = "H/s"
+
+    @property
+    def native_value(self):
+        entry = self._sma_entry()
+        if entry is None:
+            return None
+        speed = entry.get("speed")
+        return float(speed) if speed else None
 
 
 class RecentPayoutSensor(NiceHashSensorBase):

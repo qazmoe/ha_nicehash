@@ -39,32 +39,34 @@ class NiceHashClient:
             await self._client.aclose()
             self._client = None
 
-    async def _request(self, method: str, path: str, params: dict[str, str] | None = None) -> Any:
+    async def _request(self, method: str, path: str, params: dict[str, str] | None = None, auth: bool = True) -> Any:
         client = await self._ensure_client()
 
-        xtime = str(int(time.time() * 1000))
-        xnonce = str(uuid.uuid4())
         query = ""
         if params:
             query = "&".join(f"{k}={v}" for k, v in params.items())
 
-        # NiceHash HMAC signing: key\0time\0nonce\0\0org\0\0method\0path\0query
-        message = (
-            f"{self._api_key}\00{xtime}\00{xnonce}\00\00{self._org_id}"
-            f"\00\00{method}\00{path}\00{query}"
-        )
-        digest = hmac.new(
-            self._api_secret.encode(), message.encode(), sha256
-        ).hexdigest()
+        headers = {"Content-Type": "application/json"}
+        if auth:
+            xtime = str(int(time.time() * 1000))
+            xnonce = str(uuid.uuid4())
 
-        headers = {
-            "X-Time": xtime,
-            "X-Nonce": xnonce,
-            "X-Auth": f"{self._api_key}:{digest}",
-            "X-Organization-Id": self._org_id,
-            "X-Request-Id": str(uuid.uuid4()),
-            "Content-Type": "application/json",
-        }
+            # NiceHash HMAC signing: key\0time\0nonce\0\0org\0\0method\0path\0query
+            message = (
+                f"{self._api_key}\00{xtime}\00{xnonce}\00\00{self._org_id}"
+                f"\00\00{method}\00{path}\00{query}"
+            )
+            digest = hmac.new(
+                self._api_secret.encode(), message.encode(), sha256
+            ).hexdigest()
+
+            headers.update({
+                "X-Time": xtime,
+                "X-Nonce": xnonce,
+                "X-Auth": f"{self._api_key}:{digest}",
+                "X-Organization-Id": self._org_id,
+                "X-Request-Id": str(uuid.uuid4()),
+            })
 
         try:
             resp = await client.request(
@@ -86,6 +88,33 @@ class NiceHashClient:
     async def validate_credentials(self) -> dict[str, Any]:
         """Cheap authenticated call to verify key/secret/org during config flow."""
         return await self._request("GET", "/main/api/v2/accounting/accounts2", {" fiat": "USD"})
+
+    # -- Public (unauthenticated) market endpoints -------------------------
+
+    async def get_simplemultialgo(self) -> list[dict[str, Any]]:
+        data = await self._request("GET", "/main/api/v2/public/simplemultialgo/info", auth=False)
+        return data.get("miningAlgorithms", [])
+
+    async def get_global_stats_current(self) -> list[dict[str, Any]]:
+        data = await self._request("GET", "/main/api/v2/public/stats/global/current", auth=False)
+        return data.get("algos", [])
+
+    async def get_global_stats_24h(self) -> list[dict[str, Any]]:
+        data = await self._request("GET", "/main/api/v2/public/stats/global/24h", auth=False)
+        return data.get("algos", [])
+
+    async def get_algo_history(self, algorithm: str) -> list[list[float]]:
+        data = await self._request(
+            "GET",
+            "/main/api/v2/public/algo/history",
+            {"algorithm": algorithm},
+            auth=False,
+        )
+        return data if isinstance(data, list) else []
+
+    async def get_mining_algorithms(self) -> list[dict[str, Any]]:
+        data = await self._request("GET", "/main/api/v2/mining/algorithms", auth=False)
+        return data.get("miningAlgorithms", [])
 
     # -- Data endpoints -------------------------------------------------
 

@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 
 from .api import NiceHashApiError, NiceHashClient
 from .const import (
@@ -20,7 +21,9 @@ from .const import (
     CONF_ENABLE_RIGS,
     CONF_ENABLE_DEVICES,
     CONF_ENABLE_PAYOUTS,
+    CONF_WATCHED_ALGORITHMS,
     DEFAULT_CURRENCY,
+    DEFAULT_WATCHED_ALGORITHMS,
     DOMAIN,
 )
 
@@ -88,6 +91,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             CONF_ENABLE_DEVICES: False,
             CONF_ENABLE_PAYOUTS: False,
             CONF_CURRENCY: DEFAULT_CURRENCY,
+            CONF_WATCHED_ALGORITHMS: DEFAULT_WATCHED_ALGORITHMS,
         }
         return self.async_show_form(
             step_id="init",
@@ -108,6 +112,27 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_CURRENCY, default=current.get(CONF_CURRENCY, DEFAULT_CURRENCY)
                     ): vol.In(["USD", "EUR", "BTC"]),
+                    vol.Optional(
+                        CONF_WATCHED_ALGORITHMS,
+                        default=current.get(CONF_WATCHED_ALGORITHMS, DEFAULT_WATCHED_ALGORITHMS),
+                    ): cv.multi_select({
+                        "KHEAVYHASH": "Kaspa (Kheavyhash)",
+                        "DAGGERHASHIMOTO": "DaggerHashimoto (ETH-family)",
+                        "SHA256": "SHA256 (BTC)",
+                        "KAWPOW": "KawPow (Ravencoin)",
+                        "RANDOMXMONERO": "RandomX (Monero)",
+                        "ETCHASH": "Etchash",
+                        "AUTOLYKOS": "Autolykos (Ergo)",
+                        "NEXAPOW": "Nexa",
+                        "FISHHASH": "FishHash",
+                        "EQUIHASH": "Equihash",
+                        "BEAMV3": "BeamV3",
+                        "ALEPHIUM": "Alephium",
+                        "X11": "X11",
+                        "EAGLESONG": "Eaglesong (Nervos)",
+                        "VERUSHASH": "Verushash",
+                        "OCTOPUS": "Octopus (Conflux)",
+                    }),
                 }
             ),
         )
