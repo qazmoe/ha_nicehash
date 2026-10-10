@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 import uuid
@@ -31,7 +32,10 @@ class NiceHashClient:
 
     async def _ensure_client(self) -> httpx.AsyncClient:
         if self._client is None:
-            self._client = httpx.AsyncClient(base_url=API_BASE, timeout=30)
+            def _make() -> httpx.AsyncClient:
+                # build off-loop: AsyncClient() loads the CA bundle (blocking I/O)
+                return httpx.AsyncClient(base_url=API_BASE, timeout=30)
+            self._client = await asyncio.to_thread(_make)
         return self._client
 
     async def close(self) -> None:

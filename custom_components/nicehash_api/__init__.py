@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "client": client,
         "coordinator": coordinator,
     }
-    await hass.config_entries.async_forward_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
