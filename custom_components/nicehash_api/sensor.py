@@ -125,7 +125,6 @@ class RigSensorBase(NiceHashSensorBase):
             "identifiers": {(DOMAIN, self._rig_id)},
             "name": self._rig_name,
             "manufacturer": "NiceHash",
-            "via_device": (DOMAIN, "nicehash"),
         }
 
 
@@ -147,7 +146,6 @@ class RigStatusSensor(RigSensorBase):
 
 
 class RigProfitabilitySensor(RigSensorBase):
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_device_class = SensorDeviceClass.MONETARY
     _attr_icon = "mdi:cash"
 
@@ -218,7 +216,8 @@ class DeviceLoadSensor(RigSensorBase):
 
 
 class BalanceSensor(NiceHashSensorBase):
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    # monetary device_class requires state_class 'total' (or None); balances are totals, not measurements
+    _attr_state_class = SensorStateClass.TOTAL
 
     def __init__(self, coordinator, org_id, currency, balance_type):
         super().__init__(coordinator)
@@ -297,7 +296,6 @@ class AlgorithmMarketSensorBase(NiceHashSensorBase):
             "identifiers": {(DOMAIN, f"market_{self._algorithm}")},
             "name": f"NiceHash Market: {self._title}",
             "manufacturer": "NiceHash",
-            "via_device": (DOMAIN, "nicehash"),
         }
 
     def _sma_entry(self):
