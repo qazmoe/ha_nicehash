@@ -1,0 +1,23 @@
+"""Constants for the nicehash_api integration."""
+
+from __future__ import annotations
+
+DOMAIN = "nicehash_api"
+NAME = "NiceHash (maintained)"
+
+CONF_API_KEY = "api_key"
+CONF_API_SECRET = "api_secret"
+CONF_ORGANIZATION_ID = "organization_id"
+
+# Options-flow keys (sensor group toggles)
+CONF_CURRENCY = "currency"
+CONF_ENABLE_BALANCES = "enable_balances"
+CONF_ENABLE_RIGS = "enable_rigs"
+CONF_ENABLE_DEVICES = "enable_devices"
+CONF_ENABLE_PAYOUTS = "enable_payouts"
+
+DEFAULT_CURRENCY = "USD"
+
+UPDATE_INTERVAL_MINUTES = 10
+
+ATTRIBUTION = "Data provided by NiceHash"

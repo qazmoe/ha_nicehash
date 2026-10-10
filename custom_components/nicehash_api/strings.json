@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API Key",
+          "api_secret": "API Secret",
+          "organization_id": "Organization ID"
+        },
+        "description": "Enter your NiceHash API credentials. Create them at NiceHash → Settings → API Keys (permissions needed: view accounts, view mining)."
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid credentials or insufficient API permissions.",
+      "cannot_connect": "Could not connect to NiceHash."
+    },
+    "abort": {
+      "already_configured": "This NiceHash organization is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_balances": "Account balance sensors",
+          "enable_rigs": "Rig sensors",
+          "enable_devices": "Per-device sensors",
+          "enable_payouts": "Payout history sensors",
+          "currency": "Fiat currency"
+        }
+      }
+    }
+  }
+}

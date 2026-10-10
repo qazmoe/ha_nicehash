@@ -1,0 +1,13 @@
+{
+  "domain": "nicehash_api",
+  "name": "NiceHash (maintained)",
+  "codeowners": ["jguthrie"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://gitea.zlan.io/apps/ha_nicehash",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://gitea.zlan.io/apps/ha_nicehash/issues",
+  "requirements": ["httpx>=0.28.0"],
+  "version": "1.0.0"
+}
