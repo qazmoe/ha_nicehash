@@ -7,53 +7,106 @@ integration that tracks current Home Assistant APIs.
 
 ## Why
 
-- The upstream integrations died on removed HA APIs (`Config` import, `HomeAssistantType`, deprecated discovery helpers).
+- The upstream integrations died on removed HA APIs (`Config` import, `HomeAssistantType`, deprecated discovery helpers, removed `ConfigEntries` methods).
 - HA moves faster than NiceHash; an integration we own is a few hundred stable lines instead of a fork chain.
-- This repo is actively maintained by the owner's agent (jimbot) — HA deprecations get patched here.
+- This repo is actively maintained — HA deprecations get patched here.
 
 ## Features
 
 - **Config flow (UI setup)** — no YAML, no plaintext secrets in configuration.yaml
 - **Live credential validation** at setup — bad keys rejected before saving
-- **Options flow** — toggle sensor groups (balances / rigs / devices / payouts) and fiat currency without re-entering credentials
+- **Options flow** — toggle sensor groups and fiat currency without re-entering credentials
 - **Sensors**:
   - Account balances: total / available / pending, in BTC and your fiat currency
   - Rig: status, profitability, temperature
   - Per-device (optional): temperature, load
-  - Payouts (optional): most recent payout amount
-- Coordinated 10-minute polling, graceful degradation (rigs failing doesn't kill balance updates)
-- Device registry grouping (rig devices under the NiceHash hub device)
+  - Payouts (optional): recent payout + payout history attributes
+  - Market (watched algorithms): per-coin paying rate + network hashrate (difficulty proxy) — 16 selectable algorithms including Kaspa, ETH-family, BTC, Monero, Ravencoin
+- Coordinated 10-minute polling, graceful degradation (a rigs failure doesn't block balance updates)
+- Device registry grouping (rigs and markets under the NiceHash hub device)
 
 ## Installation
 
+### HACS (recommended)
+
+1. In Home Assistant, open **HACS** (install it first if you haven't: [hacs.xyz](https://hacs.xyz))
+2. Go to **HACS → ⚙️ Settings → Custom repositories** (or the "Custom repositories" entry in the HACS three-dot menu)
+3. Add this repository:
+   - **Repository:** `https://github.com/qazmoe/ha_nicehash`
+   - **Category:** **Integration**
+4. Click **Add**, then find "NiceHash (maintained)" in HACS and click **Download**
+5. **Restart Home Assistant** (HACS will prompt you)
+6. Future updates appear automatically in HACS with a red badge on the HACS icon — one click to update
+
 ### Manual
 
-Copy `custom_components/nicehash_api/` into your Home Assistant
-`custom_components/` directory, restart, then:
+Copy `custom_components/nicehash_api/` from this repo into your Home
+Assistant `custom_components/` directory (e.g. `/config/custom_components/`),
+restart, then follow the configuration steps below.
 
-**Settings → Devices & Services → Add Integration → "NiceHash (maintained)"**
+## Configuration
 
-Enter your API key, secret, and organization ID (NiceHash → Settings → API Keys;
-the key needs *view* permissions for accounts and mining).
+Setup is entirely in the UI — **no YAML needed**.
 
-### HACS
+### What you need from NiceHash
 
-Add this repository as a custom repository (category: integration).
+Before starting, get your API credentials from NiceHash:
 
-## Entity migration from the old integration
+1. Log in at [nicehash.com](https://www.nicehash.com)
+2. Go to **Settings → API Keys**
+3. Find your **Organization ID** at the top of the API keys page — copy it
+4. Click **CREATE NEW API KEY** and when creating the key, grant these permissions:
+   - **View accounts** (required — balance sensors)
+   - **View mining** (required — rig and market sensors)
+   - Withdrawal/funds-management permissions are **NOT needed** — do not grant them
+5. Copy the **API Key** and **API Secret** shown at creation time (the secret is displayed once)
 
-Sensors keep the same naming scheme as the legacy integration
-(`NiceHash Total Account Balance USD`, `<rig> Status`, etc.) so existing
-dashboards keep working after swapping.
+### Adding the integration
+
+1. **Settings → Devices & Services → Add Integration**
+2. Search for **"NiceHash (maintained)"**
+3. Enter:
+   - **API Key** — from the step above
+   - **API Secret** — from the step above
+   - **Organization ID** — from the step above
+4. The integration validates your credentials live before saving — if they're
+   wrong or missing permissions, you'll get a clear error instead of silent failures
+5. On success, your sensors appear within a minute (first data poll)
+
+### Changing options
+
+Click **Configure** on the NiceHash entry in Settings → Devices & Services:
+
+| Option | Controls |
+|---|---|
+| Account balance sensors | Total/available/pending in BTC + fiat |
+| Rig sensors | Status, profitability, temperature per rig |
+| Per-device sensors | Temp/load per GPU |
+| Payout history sensors | Recent payouts + count |
+| Fiat currency | USD / EUR / BTC for balance display |
+| Watched algorithms | Which coins get market sensors (multi-select, 16 options) |
+
+Changes apply immediately — no credential re-entry, no restart.
+
+## Entity overview
+
+| Entity pattern | Example |
+|---|---|
+| `sensor.nicehash_{total,available,pending}_account_balance_{btc,usd}` | `sensor.nicehash_total_account_balance_usd` |
+| `sensor.{rig_name}_{status,profitability,temperature}` | `sensor.nb_a100_pnj_status` |
+| `sensor.nicehash_market_{algorithm}_{paying_rate,network_hashrate}` | `sensor.nicehash_market_kheavyhash_paying_rate` |
+| `sensor.nicehash_recent_mining_payout`, `sensor.nicehash_payout_count` | (when payouts enabled) |
 
 ## Development
 
-Layout:
-
-- `custom_components/nicehash_api/api.py` — HMAC-signed NiceHash v2 client
-- `custom_components/nicehash_api/config_flow.py` — UI setup + credential validation + options flow
-- `custom_components/nicehash_api/__init__.py` — DataUpdateCoordinator
-- `custom_components/nicehash_api/sensor.py` — sensor platform
+- **Origin:** [gitea.zlan.io/apps/ha_nicehash](https://gitea.zlan.io/apps/ha_nicehash) (source of truth)
+- **This GitHub repo** is the HACS distribution mirror (HACS is GitHub-only)
+- Layout:
+  - `custom_components/nicehash_api/api.py` — HMAC-signed NiceHash v2 client
+  - `custom_components/nicehash_api/config_flow.py` — UI setup + credential validation + options flow
+  - `custom_components/nicehash_api/__init__.py` — DataUpdateCoordinator
+  - `custom_components/nicehash_api/sensor.py` — sensor platform
+- Release process: bump manifest version → tag `vX.Y.Z` → GitHub release (HACS keys on releases/tags + manifest)
 
 ## License
 
