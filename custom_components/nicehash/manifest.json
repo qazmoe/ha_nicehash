@@ -1,5 +1,5 @@
 {
-  "domain": "nicehash_api",
+  "domain": "nicehash",
   "name": "NiceHash (maintained)",
   "codeowners": [
     "jguthrie"
@@ -13,6 +13,5 @@
   "requirements": [
     "httpx>=0.28.0"
   ],
-  "version": "1.2.1",
-  "icon": "icons/logo.png"
+  "version": "1.3.0"
 }

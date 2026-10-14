@@ -40,7 +40,7 @@ integration that tracks current Home Assistant APIs.
 
 ### Manual
 
-Copy `custom_components/nicehash_api/` from this repo into your Home
+Copy `custom_components/nicehash/` from this repo into your Home
 Assistant `custom_components/` directory (e.g. `/config/custom_components/`),
 restart, then follow the configuration steps below.
 
@@ -102,10 +102,10 @@ Changes apply immediately — no credential re-entry, no restart.
 - **Origin:** [gitea.zlan.io/apps/ha_nicehash](https://gitea.zlan.io/apps/ha_nicehash) (source of truth)
 - **This GitHub repo** is the HACS distribution mirror (HACS is GitHub-only)
 - Layout:
-  - `custom_components/nicehash_api/api.py` — HMAC-signed NiceHash v2 client
-  - `custom_components/nicehash_api/config_flow.py` — UI setup + credential validation + options flow
-  - `custom_components/nicehash_api/__init__.py` — DataUpdateCoordinator
-  - `custom_components/nicehash_api/sensor.py` — sensor platform
+  - `custom_components/nicehash/api.py` — HMAC-signed NiceHash v2 client
+  - `custom_components/nicehash/config_flow.py` — UI setup + credential validation + options flow
+  - `custom_components/nicehash/__init__.py` — DataUpdateCoordinator
+  - `custom_components/nicehash/sensor.py` — sensor platform
 - Release process: bump manifest version → tag `vX.Y.Z` → GitHub release (HACS keys on releases/tags + manifest)
 
 ## License

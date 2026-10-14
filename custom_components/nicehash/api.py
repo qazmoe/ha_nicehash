@@ -1,4 +1,4 @@
-"""NiceHash API v2 client for the nicehash_api integration."""
+"""NiceHash API v2 client for the nicehash integration."""
 
 from __future__ import annotations
 

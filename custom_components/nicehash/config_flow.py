@@ -1,4 +1,4 @@
-"""Config flow for the nicehash_api integration (UI setup with validation)."""
+"""Config flow for the nicehash integration (UI setup with validation)."""
 
 from __future__ import annotations
 

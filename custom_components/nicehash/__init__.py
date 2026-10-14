@@ -1,4 +1,4 @@
-"""The nicehash_api integration: coordinator + setup."""
+"""The nicehash integration: coordinator + setup."""
 
 from __future__ import annotations
 

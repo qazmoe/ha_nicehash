@@ -1,4 +1,4 @@
-"""Sensor platform for the nicehash_api integration."""
+"""Sensor platform for the nicehash integration."""
 
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ async def async_setup_entry(
 
 
 class NiceHashSensorBase(SensorEntity):
-    """Shared base for all nicehash_api sensors."""
+    """Shared base for all nicehash sensors."""
 
     _attr_attribution = ATTRIBUTION
 

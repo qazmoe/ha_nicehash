@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-DOMAIN = "nicehash_api"
+DOMAIN = "nicehash"
 NAME = "NiceHash (maintained)"
 
 CONF_API_KEY = "api_key"
