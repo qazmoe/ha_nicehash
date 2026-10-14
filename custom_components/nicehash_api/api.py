@@ -119,6 +119,36 @@ class NiceHashClient:
         data = await self._request("GET", "/main/api/v2/mining/algorithms", auth=False)
         return data.get("miningAlgorithms", [])
 
+    # -- External market data (CoinGecko, unauthenticated) -----------------
+
+    COINGECKO_IDS = {"kaspa": "kaspa", "ravencoin": "ravencoin"}
+
+    async def get_coin_prices(self, coins: list[str]) -> dict[str, dict[str, float]]:
+        """Fetch BTC + USD prices for tracked coins from CoinGecko's free API."""
+        ids = ",".join(self.COINGECKO_IDS[c] for c in coins if c in self.COINGECKO_IDS)
+        if not ids:
+            return {}
+        url = (
+            "https://api.coingecko.com/api/v3/simple/price"
+            f"?ids={ids}&vs_currencies=btc,usd"
+        )
+        client = await self._ensure_client()
+        try:
+            resp = await client.get(url)
+            if resp.status_code == 200:
+                data = resp.json()
+                return {
+                    coin: {
+                        "btc": data.get(cid, {}).get("btc"),
+                        "usd": data.get(cid, {}).get("usd"),
+                    }
+                    for coin, cid in self.COINGECKO_IDS.items()
+                    if coin in coins and cid in data
+                }
+        except httpx.HTTPError:
+            pass
+        return {}
+
     # -- Data endpoints -------------------------------------------------
 
     async def get_accounts(self) -> list[dict[str, Any]]:

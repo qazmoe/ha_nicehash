@@ -22,8 +22,11 @@ from .const import (
     CONF_ENABLE_DEVICES,
     CONF_ENABLE_PAYOUTS,
     CONF_WATCHED_ALGORITHMS,
+    CONF_TRACKED_COINS,
     DEFAULT_CURRENCY,
     DEFAULT_WATCHED_ALGORITHMS,
+    DEFAULT_TRACKED_COINS,
+    TRACKABLE_COINS,
     DOMAIN,
 )
 
@@ -118,8 +121,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ): cv.multi_select({
                         "KHEAVYHASH": "Kaspa (Kheavyhash)",
                         "DAGGERHASHIMOTO": "DaggerHashimoto (ETH-family)",
-                        "SHA256": "SHA256 (BTC)",
                         "KAWPOW": "KawPow (Ravencoin)",
+                        "SHA256": "SHA256 (BTC)",
                         "RANDOMXMONERO": "RandomX (Monero)",
                         "ETCHASH": "Etchash",
                         "AUTOLYKOS": "Autolykos (Ergo)",
@@ -133,6 +136,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         "VERUSHASH": "Verushash",
                         "OCTOPUS": "Octopus (Conflux)",
                     }),
+                    vol.Optional(
+                        CONF_TRACKED_COINS,
+                        default=current.get(CONF_TRACKED_COINS, DEFAULT_TRACKED_COINS),
+                    ): cv.multi_select(TRACKABLE_COINS),
                 }
             ),
         )

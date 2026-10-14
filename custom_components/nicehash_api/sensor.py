@@ -69,6 +69,13 @@ async def async_setup_entry(
         entities.append(AlgorithmPayingSensor(coordinator, algo, algo_info.get("title", algo)))
         entities.append(AlgorithmNetworkSpeedSensor(coordinator, algo, algo_info.get("title", algo)))
 
+    # v1.2: coin price sensors (CoinGecko) for tracked coins
+    from .const import TRACKABLE_COINS
+    for coin in coordinator.data.get("tracked_coins", []):
+        label = TRACKABLE_COINS.get(coin, coin.capitalize())
+        entities.append(CoinPriceSensor(coordinator, coin, label, "usd"))
+        entities.append(CoinPriceSensor(coordinator, coin, label, "btc"))
+
     async_add_entities(entities)
 
 
@@ -353,6 +360,44 @@ class AlgorithmNetworkSpeedSensor(AlgorithmMarketSensorBase):
             return None
         speed = entry.get("speed")
         return float(speed) if speed else None
+
+
+class CoinPriceSensor(NiceHashSensorBase):
+    """Spot price of a tracked coin in USD or BTC (CoinGecko)."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator, coin, label, currency):
+        super().__init__(coordinator)
+        self._coin = coin
+        self._currency = currency
+        symbol = "KAS" if coin == "kaspa" else "RVN" if coin == "ravencoin" else coin.upper()
+        cur_display = "$" if currency == "usd" else "BTC"
+        self._attr_name = f"{label} Price ({cur_display})"
+        self._attr_unique_id = f"coin:{coin}:price_{currency}"
+        if currency == "usd":
+            self._attr_device_class = SensorDeviceClass.MONETARY
+            self._attr_native_unit_of_measurement = "USD"
+        else:
+            self._attr_native_unit_of_measurement = "BTC"
+
+    @property
+    def device_info(self):
+        from .const import TRACKABLE_COINS
+        return {
+            "identifiers": {(DOMAIN, f"coin_{self._coin}")},
+            "name": f"NiceHash Coins: {TRACKABLE_COINS.get(self._coin, self._coin)}",
+            "manufacturer": "CoinGecko via NiceHash integration",
+        }
+
+    @property
+    def native_value(self):
+        prices = self._coordinator.data.get("coin_prices", {})
+        entry = prices.get(self._coin)
+        if not entry:
+            return None
+        value = entry.get(self._currency)
+        return float(value) if value is not None else None
 
 
 class RecentPayoutSensor(NiceHashSensorBase):

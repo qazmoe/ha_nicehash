@@ -68,6 +68,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except NiceHashApiError as err:
             _LOGGER.warning("Could not fetch simplemultialgo: %s", err)
         data["watched_algorithms"] = watched
+
+        # v1.2: coin prices (CoinGecko, unauthenticated) for the tracked coins
+        tracked_coins = [c.lower() for c in entry.options.get("tracked_coins", ["kaspa"])]
+        try:
+            data["coin_prices"] = await client.get_coin_prices(tracked_coins)
+        except Exception as err:  # CoinGecko is external; never block the coordinator
+            _LOGGER.warning("Could not fetch coin prices: %s", err)
+        data["tracked_coins"] = tracked_coins
         return data
 
     coordinator = DataUpdateCoordinator(

@@ -24,4 +24,9 @@ UPDATE_INTERVAL_MINUTES = 10
 CONF_WATCHED_ALGORITHMS = "watched_algorithms"
 DEFAULT_WATCHED_ALGORITHMS = ["KHEAVYHASH", "DAGGERHASHIMOTO"]
 
+# v1.2: coin tracking (CoinGecko price sensors)
+CONF_TRACKED_COINS = "tracked_coins"
+DEFAULT_TRACKED_COINS = ["kaspa"]
+TRACKABLE_COINS = {"kaspa": "Kaspa (KAS)", "ravencoin": "Ravencoin (RVN)"}
+
 ATTRIBUTION = "Data provided by NiceHash"
