@@ -365,20 +365,19 @@ class AlgorithmNetworkSpeedSensor(AlgorithmMarketSensorBase):
 class CoinPriceSensor(NiceHashSensorBase):
     """Spot price of a tracked coin in USD or BTC (CoinGecko)."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
     def __init__(self, coordinator, coin, label, currency):
         super().__init__(coordinator)
         self._coin = coin
         self._currency = currency
-        symbol = "KAS" if coin == "kaspa" else "RVN" if coin == "ravencoin" else coin.upper()
         cur_display = "$" if currency == "usd" else "BTC"
         self._attr_name = f"{label} Price ({cur_display})"
         self._attr_unique_id = f"coin:{coin}:price_{currency}"
         if currency == "usd":
+            # monetary device_class forbids state_class 'measurement' on prices
             self._attr_device_class = SensorDeviceClass.MONETARY
             self._attr_native_unit_of_measurement = "USD"
         else:
+            self._attr_state_class = SensorStateClass.MEASUREMENT
             self._attr_native_unit_of_measurement = "BTC"
 
     @property
