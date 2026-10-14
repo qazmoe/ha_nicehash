@@ -28,10 +28,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _update() -> dict[str, Any]:
         data: dict[str, Any] = {
-            "rigs": [], "accounts": [], "payouts": None,
+            "rigs": [], "accounts": {}, "payouts": None,
             "market": {}, "market_24h": {}, "simplemultialgo": [],
         }
         try:
+            # accounts2 payload: {total: {...BTC totals...}, currencies: [...], ...}
             data["accounts"] = await client.get_accounts()
         except NiceHashApiError as err:
             raise UpdateFailed(f"Error fetching NiceHash accounts: {err}") from err

@@ -151,9 +151,9 @@ class NiceHashClient:
 
     # -- Data endpoints -------------------------------------------------
 
-    async def get_accounts(self) -> list[dict[str, Any]]:
-        data = await self._request("GET", "/main/api/v2/accounting/accounts2")
-        return data.get("accounts", []) if isinstance(data, dict) else []
+    async def get_accounts(self) -> dict[str, Any]:
+        """Return the accounts2 payload: {total: {...}, currencies: [...]} structure."""
+        return await self._request("GET", "/main/api/v2/accounting/accounts2")
 
     async def get_rigs(self) -> dict[str, Any]:
         return await self._request("GET", "/main/api/v2/mining/rigs2", {"size": "500"})

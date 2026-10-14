@@ -242,15 +242,39 @@ class BalanceSensor(NiceHashSensorBase):
 
     @property
     def native_value(self):
-        for account in self._coordinator.data.get("accounts", []):
-            if account.get("currency") == self._currency:
+        accounts = self._coordinator.data.get("accounts") or {}
+        # accounts2 payload: {total: {totalBalance, available, pending (BTC)},
+        #                     currencies: [{currency, available, fiatRate...}]}
+        if self._currency == "BTC":
+            total = accounts.get("total") or {}
+            key = {
+                "total": "totalBalance",
+                "available": "available",
+                "pending": "pending",
+            }[self._balance_type]
+            value = total.get(key)
+            return float(value) if value is not None else None
+        # fiat: sum holdings in that currency (or convert BTC via fiatRate)
+        for c in accounts.get("currencies", []):
+            if c.get("currency") == self._currency:
                 key = {
-                    "total": "totalBalance",
-                    "available": "availableBalance",
-                    "pending": "pendingBalance",
+                    "total": "balance",
+                    "available": "available",
+                    "pending": "pending",
                 }[self._balance_type]
-                value = account.get(key)
-                return float(value) if value is not None else None
+                value = c.get(key)
+                if value is not None:
+                    return float(value)
+        # fallback: BTC holdings x fiatRate (fiatRate = BTC price in that currency)
+        total = accounts.get("total") or {}
+        btc = float(total.get("totalBalance") or 0)
+        rate = None
+        for c in accounts.get("currencies", []):
+            if c.get("currency") == self._currency and c.get("fiatRate"):
+                rate = float(c["fiatRate"])
+                break
+        if rate and btc:
+            return btc * rate
         return None
 
 
