@@ -76,6 +76,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data["coin_prices"] = await client.get_coin_prices(tracked_coins)
         except Exception as err:  # CoinGecko is external; never block the coordinator
             _LOGGER.warning("Could not fetch coin prices: %s", err)
+        # v1.4: network difficulty per tracked coin (explorer APIs, best-effort)
+        data["coin_difficulty"] = {}
+        for coin in tracked_coins:
+            try:
+                diff = await client.get_coin_difficulty(coin)
+                if diff is not None:
+                    data["coin_difficulty"][coin] = diff
+            except Exception as err:
+                _LOGGER.warning("Could not fetch %s difficulty: %s", coin, err)
         data["tracked_coins"] = tracked_coins
         return data
 

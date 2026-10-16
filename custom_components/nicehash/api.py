@@ -123,6 +123,38 @@ class NiceHashClient:
 
     COINGECKO_IDS = {"kaspa": "kaspa", "ravencoin": "ravencoin"}
 
+    # Per-coin public difficulty endpoints (checked 2026-10-16)
+    DIFFICULTY_ENDPOINTS = {
+        "kaspa": "https://api.kaspa.org/info/blockdag",
+        "ravencoin": "https://rvn-blockbook.trezor.io/api/v2",
+    }
+
+    async def get_coin_difficulty(self, coin: str) -> float | None:
+        """Fetch current network difficulty for a coin. Returns None on failure."""
+        url = self.DIFFICULTY_ENDPOINTS.get(coin)
+        if not url:
+            return None
+        client = await self._ensure_client()
+        try:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            if coin == "kaspa":
+                return float(data.get("difficulty") or 0) or None
+            if coin == "ravencoin":
+                # blockbook: difficulty lives in bestBlockLogs or /api/v2 status;
+                # best effort: {'bestBlockLogs': {...}} or top-level 'difficulty'
+                d = data.get("difficulty")
+                if d is not None:
+                    return float(d)
+                best = data.get("bestBlock") or {}
+                d2 = best.get("difficulty")
+                return float(d2) if d2 is not None else None
+        except (httpx.HTTPError, ValueError, KeyError):
+            return None
+        return None
+
     async def get_coin_prices(self, coins: list[str]) -> dict[str, dict[str, float]]:
         """Fetch BTC + USD prices for tracked coins from CoinGecko's free API."""
         ids = ",".join(self.COINGECKO_IDS[c] for c in coins if c in self.COINGECKO_IDS)

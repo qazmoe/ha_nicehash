@@ -75,6 +75,9 @@ async def async_setup_entry(
         label = TRACKABLE_COINS.get(coin, coin.capitalize())
         entities.append(CoinPriceSensor(coordinator, coin, label, "usd"))
         entities.append(CoinPriceSensor(coordinator, coin, label, "btc"))
+        # v1.4: network difficulty sensor (Kaspa live; Ravencoin best-effort)
+        if coin in coordinator.data.get("coin_difficulty", {}):
+            entities.append(CoinDifficultySensor(coordinator, coin, label))
 
     async_add_entities(entities)
 
@@ -421,6 +424,33 @@ class CoinPriceSensor(NiceHashSensorBase):
             return None
         value = entry.get(self._currency)
         return float(value) if value is not None else None
+
+
+class CoinDifficultySensor(NiceHashSensorBase):
+    """Current network difficulty for a tracked coin (public explorer API)."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:chart-line"
+
+    def __init__(self, coordinator, coin, label):
+        super().__init__(coordinator)
+        self._coin = coin
+        self._label = label
+        self._attr_name = f"{label} Network Difficulty"
+        self._attr_unique_id = f"coin:{coin}:difficulty"
+        self._attr_native_unit_of_measurement = "H"  # hash-difficulty unit
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, f"coin_{self._coin}")},
+            "name": f"NiceHash Coins: {self._label}",
+            "manufacturer": "CoinGecko via NiceHash integration",
+        }
+
+    @property
+    def native_value(self):
+        return self._coordinator.data.get("coin_difficulty", {}).get(self._coin)
 
 
 class RecentPayoutSensor(NiceHashSensorBase):
