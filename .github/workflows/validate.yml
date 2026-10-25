@@ -16,7 +16,7 @@ jobs:
     # so guard to GitHub-only (server URL AND repo path): on Gitea the job
     # skips instead of validating the wrong context.
     if: github.server_url == 'https://github.com' && github.repository == 'qazmoe/ha_nicehash'
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04"  # pinned: ubuntu-latest moved to Ubuntu 26 on 2026-10-19
     steps:
       - name: HACS validation
         uses: "hacs/action@main"
@@ -30,7 +30,7 @@ jobs:
     # Home Assistant integration structure validation (recommended alongside
     # the HACS action by the HACS docs)
     if: github.server_url == 'https://github.com' && github.repository == 'qazmoe/ha_nicehash'
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04"  # pinned: ubuntu-latest moved to Ubuntu 26 on 2026-10-19
     steps:
       - name: Check out code
         uses: "actions/checkout@v7"
