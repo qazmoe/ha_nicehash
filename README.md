@@ -1,9 +1,19 @@
 # ha_nicehash — NiceHash integration for Home Assistant (maintained)
 
+![NiceHash for Home Assistant](assets/banner.svg)
+
 A from-scratch, config-flow-based NiceHash integration built against the
 [NiceHash API v2 docs](https://www.nicehash.com/docs/). Replaces the abandoned
 `brianberg/ha-nicehash` line (and its one-commit forks) with a modern
 integration that tracks current Home Assistant APIs.
+
+> **⚠️ Upgrading from v1.1.x of this integration:** v1.3.0 renamed the
+> integration domain from `nicehash_api` to `nicehash`. Home Assistant treats
+> the two as separate integrations — after updating, remove the old
+> `nicehash_api` entry (**Settings → Devices & Services → nicehash_api →
+> Delete**), then re-add via **Add Integration → NiceHash (maintained)** with
+> your credentials. Sensor data is identical; entity IDs regenerate under the
+> new domain.
 
 ## Why
 
@@ -110,4 +120,4 @@ Changes apply immediately — no credential re-entry, no restart.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
