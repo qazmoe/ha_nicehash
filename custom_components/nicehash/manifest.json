@@ -2,7 +2,7 @@
   "domain": "nicehash",
   "name": "NiceHash (maintained)",
   "codeowners": [
-    "qazmoe"
+    "@qazmoe"
   ],
   "config_flow": true,
   "dependencies": [],
