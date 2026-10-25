@@ -13,9 +13,9 @@ jobs:
   validate-hacs:
     # HACS validates the GitHub copy exactly as HACS serves it (latest release
     # for repos that use releases). The Gitea origin also picks up this file,
-    # so guard to GitHub-only: on Gitea the job skips instead of producing
-    # wrong-context results.
-    if: github.server_url == 'https://github.com'
+    # so guard to GitHub-only (server URL AND repo path): on Gitea the job
+    # skips instead of validating the wrong context.
+    if: github.server_url == 'https://github.com' && github.repository == 'qazmoe/ha_nicehash'
     runs-on: "ubuntu-latest"
     steps:
       - name: HACS validation
@@ -29,7 +29,7 @@ jobs:
   hassfest:
     # Home Assistant integration structure validation (recommended alongside
     # the HACS action by the HACS docs)
-    if: github.server_url == 'https://github.com'
+    if: github.server_url == 'https://github.com' && github.repository == 'qazmoe/ha_nicehash'
     runs-on: "ubuntu-latest"
     steps:
       - name: Check out code
